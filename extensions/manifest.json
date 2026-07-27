@@ -1,0 +1,12 @@
+{
+    "manifest_version": 3,
+    "name": "Bookmark Sync Experiment",
+    "version": "1.0",
+    "description": "Synkar bokmärken med min egna dashboard",
+    "permissions": [
+        "bookmarks"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    }
+}
