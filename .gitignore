@@ -1,0 +1,11 @@
+# OS-specifika filer
+.DS_Store
+Thumbs.db
+
+# Node / Frontend-beroenden (om du använder det sen)
+node_modules/
+dist/
+.env
+
+# n8n / Lokala nycklar
+*.env.local
