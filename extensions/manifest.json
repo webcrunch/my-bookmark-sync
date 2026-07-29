@@ -8,5 +8,10 @@
     ],
     "background": {
         "service_worker": "background.js"
+    },
+    "icons": {
+        "16": "icons/books16.png",
+        "48": "icons/books48.png",
+        "128": "icons/books128.png"
     }
 }
