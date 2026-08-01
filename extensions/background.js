@@ -1,8 +1,8 @@
-const n8n_webhook_url = 'https://jarllindquist.com/n8n/webhook-test/bookmarks'
+const n8n_webhook_url = 'https://jarllindquist.com/n8n/webhook-test/bookmarks';
 
-// lyssna på när användaren skapar ett nytt bokmärke i Crome
-crome.bookmarks.onCreated.addListener((id, bookmark) => {
-  console.log("Nytt bokmärke skapats , skickar till n8n...", bookmark)
+// Lyssna på när användaren skapar ett nytt bokmärke i Chrome
+chrome.bookmarks.onCreated.addListener((id, bookmark) => {
+  console.log("Nytt bokmärke skapat, skickar till n8n...", bookmark);
 
   // Bygger ett rent objekt att skicka
   const payload = {
@@ -11,8 +11,8 @@ crome.bookmarks.onCreated.addListener((id, bookmark) => {
     url: bookmark.url || null,
     isFolder: !bookmark.url,
     parentId: bookmark.parentId,
-    createdAt: new Date().toISOString
-  }
+    createdAt: new Date().toISOString() // Rättat: lade till ()
+  };
 
   // Skicka data till n8n via POST
   fetch(n8n_webhook_url, {
@@ -21,16 +21,18 @@ crome.bookmarks.onCreated.addListener((id, bookmark) => {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
-  }).then(resp => {
-    if (resp.ok) console.log("Lyckades skicka bokmärket till n8n. ")
-    else console.error("n8n svarade med felkod:", resp.status)
-  }).catch(error => {
-    console.error("kunde inte nå n8n webbhook:", error)
   })
-
-
-
-})
+    .then(resp => {
+      if (resp.ok) {
+        console.log("Lyckades skicka bokmärket till n8n.");
+      } else {
+        console.error("n8n svarade med felkod:", resp.status);
+      }
+    })
+    .catch(error => {
+      console.error("Kunde inte nå n8n webhook:", error);
+    });
+});
 
 // // 1. Körs när tillägget installeras eller startas
 // chrome.runtime.onInstalled.addListener(() => {
