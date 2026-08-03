@@ -4,10 +4,18 @@
     "version": "1.0",
     "description": "Synkar bokmärken med min egna dashboard",
     "permissions": [
-        "bookmarks"
+        "bookmarks",
+        "alarms",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://jarllindquist.com/*"
     ],
     "background": {
         "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
     },
     "icons": {
         "16": "icons/books16.png",
