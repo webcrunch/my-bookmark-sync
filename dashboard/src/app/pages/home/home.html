@@ -1,1 +1,102 @@
-<p>home works!</p>
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Topprubrik -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+            <p class="text-slate-400 text-sm mt-1">Överblick över dina synkade bokmärken och kategorier</p>
+        </div>
+
+        <button (click)="bookmarkService.loadBookmarks().subscribe()"
+            class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition flex items-center gap-2">
+            <span>🔄</span> Uppdatera data
+        </button>
+    </div>
+
+    <!-- Statistik-Kort (KPI:er) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Totalt antal länkar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Sparade Länkar</span>
+                <span class="text-xl">🔗</span>
+            </div>
+            <div class="text-3xl font-bold text-white">{{ bookmarkService.stats().totalLinks }}</div>
+        </div>
+
+        <!-- Mappar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Mappar</span>
+                <span class="text-xl">📁</span>
+            </div>
+            <div class="text-3xl font-bold text-indigo-400">{{ bookmarkService.stats().totalFolders }}</div>
+        </div>
+
+        <!-- Osorterade -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">Osorterade</span>
+                <span class="text-xl">📥</span>
+            </div>
+            <div class="text-3xl font-bold text-amber-400">{{ bookmarkService.stats().unorganizedCount }}</div>
+        </div>
+
+        <!-- AI Berikade -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider">AI Taggar/Info</span>
+                <span class="text-xl">✨</span>
+            </div>
+            <div class="text-3xl font-bold text-emerald-400">{{ bookmarkService.stats().aiTaggedCount }}</div>
+        </div>
+    </div>
+
+    <!-- Senaste Länkar & Snabbåtgärder -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Vänster 2 kolumner: Senaste aktivitet -->
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-white">Senast Tillagda Länkar</h2>
+                <a routerLink="/overview" class="text-xs text-indigo-400 hover:text-indigo-300">Visa alla →</a>
+            </div>
+
+            @if (bookmarkService.isLoading()) {
+            <div class="py-8 text-center text-slate-500 text-sm">Laddar bokmärken...</div>
+            } @else if (bookmarkService.recentBookmarks().length === 0) {
+            <div class="py-8 text-center text-slate-500 text-sm">Inga bokmärken hittades än.</div>
+            } @else {
+            <div class="divide-y divide-slate-800">
+                @for (bm of bookmarkService.recentBookmarks(); track bm.id) {
+                <div class="py-3 flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <a [href]="bm.url" target="_blank"
+                            class="text-sm font-medium text-slate-200 hover:text-indigo-400 truncate block">
+                            {{ bm.title }}
+                        </a>
+                        <span class="text-xs text-slate-500 truncate block mt-0.5">{{ bm.url }}</span>
+                    </div>
+                    <span class="text-xs px-2.5 py-1 rounded bg-slate-800 text-slate-400 shrink-0">Länk</span>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Höger 1 kolumn: Snabbåtgärder / Navigering -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+            <h2 class="text-lg font-semibold text-white">Snabbåtgärder</h2>
+            <p class="text-xs text-slate-400">Hantera strukturen eller städa bland dina mappar.</p>
+
+            <div class="space-y-2 pt-2">
+                <a routerLink="/overview"
+                    class="block w-full text-center py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition">
+                    Öppna Trädvyn
+                </a>
+                <a routerLink="/tags"
+                    class="block w-full text-center py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium border border-slate-700 transition">
+                    Utforska Taggar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
