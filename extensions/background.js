@@ -79,7 +79,10 @@ chrome.bookmarks.onMoved.addListener((id, moveInfo) => {
 });
 
 // Hjälpfunktion för att skicka händelser till n8n
-function sendToN8n(payload) {
+async function sendToN8n(payload) {
+  // En dator som inte synkar skickar ingenting; Chrome-synken tar ändringen till den som gör det
+  if (!(await isSyncDevice())) return;
+
   n8nFetch('bookmarks-event', {
     method: 'POST',
     headers: {
@@ -113,7 +116,10 @@ chrome.alarms.onAlarm.addListener(alarm => {
 });
 
 // Funktion för att kontrollera ändringar från n8n
-const checkForUpdatesFromDashboard = () => {
+const checkForUpdatesFromDashboard = async () => {
+  // Bara den synkande datorn hämtar ändringar; de andra får dem via Chrome-synken
+  if (!(await isSyncDevice())) return;
+
   chrome.storage.local.get(['lastSyncTimestamp'], result => {
     // Om inget finns sparat, börja från 1970
     const lastSync = result.lastSyncTimestamp || new Date(0).toISOString();

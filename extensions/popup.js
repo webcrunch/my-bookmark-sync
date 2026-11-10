@@ -54,7 +54,8 @@ document.getElementById('syncBtn').addEventListener('click', () => {
       })
       .catch(error => {
         console.error(error);
-        statusEl.innerText = "Kunde inte nå n8n.";
+        // Saknad nyckel eller en dator som inte synkar säger själva vad som är fel
+        statusEl.innerText = error.message.startsWith('Failed to fetch') ? "Kunde inte nå n8n." : error.message;
       });
   });
 });
