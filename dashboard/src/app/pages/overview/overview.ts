@@ -1,35 +1,56 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, effect, ElementRef, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { BookmarkService } from '../../services/bookmark.service';
 import { BookmarkNode, Bookmark, AiOrganizeResponse } from '../../models/bookmark.model';
+import { FolderTreeComponent } from '../../components/folder-tree/folder-tree';
+import { LinkRowComponent } from '../../components/link-row/link-row';
 
 @Component({
   selector: 'app-overview',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FolderTreeComponent, LinkRowComponent],
   templateUrl: './overview.html',
   styleUrl: './overview.scss'
 })
 export class OverviewComponent implements OnInit {
   bookmarkService = inject(BookmarkService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   protected readonly Math = Math;
+  private content = viewChild<ElementRef<HTMLElement>>('content');
 
-  // Vald mapp & Paginering
-  selectedFolder = signal<BookmarkNode | null>(null);
+  // Vald mapp (via id, så att den överlever en omladdning av trädet) & Paginering
+  private selectedId = signal<string | null>(null);
   currentPage = signal<number>(1);
   pageSize = signal<number>(15);
+
+  // ?folder=<id> från länkar på andra sidor
+  private folderParam = toSignal(this.route.queryParamMap.pipe(map(p => p.get('folder'))));
 
   // AI-organisera State & Modaler
   isAiAnalyzing = signal<boolean>(false);
   isApplyingChanges = signal<boolean>(false);
   aiSuggestion = signal<AiOrganizeResponse | null>(null);
   showAiModal = signal<boolean>(false);
+  message = signal<string>('');
 
-  // Alla objekt i vald mapp
+  selectedFolder = computed<BookmarkNode | null>(() => {
+    const id = this.selectedId();
+    return id ? this.findNode(this.bookmarkService.folderTree(), id)?.node || null : null;
+  });
+
+  selectedPath = computed(() => this.bookmarkService.folderPath(this.selectedFolder()?.parentId));
+
+  // Alla objekt i vald mapp: undermappar först, sedan länkar
   currentFolderItems = computed<Bookmark[]>(() => {
-    const folder = this.selectedFolder();
-    if (!folder) return [];
-    return this.bookmarkService.bookmarks().filter(b => b.parentId === folder.id);
+    const id = this.selectedId();
+    if (!id) return [];
+    return this.bookmarkService.bookmarks()
+      .filter(b => b.parentId === id)
+      .sort((a, b) => Number(b.isFolder) - Number(a.isFolder));
   });
 
   // Endast länkar i den valda mappen
@@ -50,35 +71,36 @@ export class OverviewComponent implements OnInit {
     return items.slice(startIndex, startIndex + size);
   });
 
+  constructor() {
+    // Välj mappen från ?folder= (eller den första) när trädet finns, och fäll ut vägen dit
+    effect(() => {
+      const tree = this.bookmarkService.folderTree();
+      if (tree.length === 0) return;
+      const wanted = this.folderParam();
+      const found = wanted ? this.findNode(tree, wanted) : null;
+      if (found) {
+        found.ancestors.forEach(a => (a.expanded = true));
+        this.selectedId.set(found.node.id);
+        this.currentPage.set(1);
+      } else if (!this.selectedId()) {
+        this.selectedId.set(tree[0].id);
+      }
+    });
+  }
+
   ngOnInit() {
     if (this.bookmarkService.bookmarks().length === 0) {
-      this.bookmarkService.loadBookmarks().subscribe(() => {
-        const roots = this.bookmarkService.folderTree();
-        if (roots.length > 0 && !this.selectedFolder()) {
-          this.selectFolder(roots[0]);
-        }
-      });
-    } else {
-      const roots = this.bookmarkService.folderTree();
-      if (roots.length > 0 && !this.selectedFolder()) {
-        this.selectFolder(roots[0]);
-      }
+      this.bookmarkService.loadBookmarks().subscribe();
     }
   }
 
-  selectFolder(folder: BookmarkNode) {
-    this.selectedFolder.set(folder);
-    this.currentPage.set(1);
-  }
-
-  toggleExpand(folder: BookmarkNode, event: MouseEvent) {
-    event.stopPropagation();
-    folder.expanded = !folder.expanded;
-  }
-
-  goToPage(page: number) {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
+  selectFolder(folder: Pick<Bookmark, 'id'>) {
+    // Adressen visar vald mapp, så att den går att länka till och överlever en omladdning
+    this.router.navigate([], { queryParams: { folder: folder.id }, replaceUrl: true });
+    this.message.set('');
+    // På mobil ligger innehållet under trädet: hoppa ner till det
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setTimeout(() => this.content()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }
   }
 
@@ -102,17 +124,22 @@ export class OverviewComponent implements OnInit {
     if (!folder || links.length === 0) return;
 
     this.isAiAnalyzing.set(true);
+    this.message.set('');
 
     this.bookmarkService.getAiOrganizationSuggestions(folder.id, links).subscribe({
       next: (response) => {
         this.aiSuggestion.set(response);
         this.isAiAnalyzing.set(false);
-        this.showAiModal.set(true);
+        if (response?.categories?.length) {
+          this.showAiModal.set(true);
+        } else {
+          this.message.set('AI:n hittade inga mappar att föreslå för den här mappen.');
+        }
       },
       error: (err) => {
         console.error('AI-analys misslyckades:', err);
         this.isAiAnalyzing.set(false);
-        alert('Kunde inte genomföra AI-analysen just nu.');
+        this.message.set('Kunde inte genomföra AI-analysen just nu. Försök igen om en stund.');
       }
     });
   }
@@ -127,11 +154,13 @@ export class OverviewComponent implements OnInit {
       next: () => {
         this.isApplyingChanges.set(false);
         this.closeModal();
+        this.message.set('Mapparna är skapade. Chrome får ändringen inom en minut.');
       },
       error: (err) => {
         console.error('Kunde inte tillämpa ändringar:', err);
         this.isApplyingChanges.set(false);
-        alert('Ett fel uppstod när ändringarna skulle sparas.');
+        this.closeModal();
+        this.message.set('Ändringarna kunde inte sparas. Ingenting har flyttats.');
       }
     });
   }
@@ -144,5 +173,14 @@ export class OverviewComponent implements OnInit {
   getBookmarkTitle(id: string): string {
     const item = this.bookmarkService.bookmarks().find(b => b.id === id);
     return item?.title || `Länk #${id}`;
+  }
+
+  private findNode(nodes: BookmarkNode[], id: string, ancestors: BookmarkNode[] = []): { node: BookmarkNode; ancestors: BookmarkNode[] } | null {
+    for (const node of nodes) {
+      if (node.id === id) return { node, ancestors };
+      const hit = this.findNode(node.children || [], id, [...ancestors, node]);
+      if (hit) return hit;
+    }
+    return null;
   }
 }

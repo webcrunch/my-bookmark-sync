@@ -16,7 +16,8 @@ export interface BookmarkStats {
     totalLinks: number;
     totalFolders: number;
     unorganizedCount: number;
-    aiTaggedCount: number;
+    // Extra exemplar av en adress som redan finns (tre likadana = två dubbletter)
+    duplicateCount: number;
 }
 
 export interface BookmarkNode extends Bookmark {
