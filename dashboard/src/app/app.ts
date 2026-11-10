@@ -1,6 +1,7 @@
-import { Component, signal } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { SidebarComponent } from "./components/sidebar/sidebar";
+import { AdminSessionState } from "./services/admin-session.interceptor";
 
 @Component({
   selector: 'app-root',
@@ -12,4 +13,5 @@ import { SidebarComponent } from "./components/sidebar/sidebar";
 
 export class AppComponent {
   title = 'dashboard'
+  session = inject(AdminSessionState)
 }

@@ -1,4 +1,4 @@
-const N8N_SYNC_WEBHOOK_URL = 'https://jarllindquist.com/n8n/webhook-test/bookmarks-full-sync';
+// n8nFetch kommer från api.js (laddas före den här filen i popup.html)
 
 // Hjälpfunktion för att platta till det nästlade trädet
 function flattenBookmarks(nodes, parentId = null) {
@@ -34,7 +34,7 @@ document.getElementById('syncBtn').addEventListener('click', () => {
     statusEl.innerText = `Skickar ${flatBookmarks.length} objekt till n8n...`;
 
     // 2. Skicka hela arrayen till n8n
-    fetch(N8N_SYNC_WEBHOOK_URL, {
+    n8nFetch('bookmarks-full-sync', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
