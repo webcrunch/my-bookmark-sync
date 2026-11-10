@@ -49,6 +49,35 @@ chrome.bookmarks.onRemoved.addListener((id, removeInfo) => {
   sendToN8n(payload);
 });
 
+// Lyssna när ett bokmärke eller en mapp byter namn (eller ett bokmärke byter adress)
+chrome.bookmarks.onChanged.addListener((id, changeInfo) => {
+  if (isApplyingRemoteChanges) return;
+
+  sendToN8n({
+    action: 'UPDATE',
+    data: {
+      id: id,
+      title: changeInfo.title,
+      url: changeInfo.url || null
+    }
+  });
+});
+
+// Lyssna när ett bokmärke eller en mapp flyttas till en annan mapp
+chrome.bookmarks.onMoved.addListener((id, moveInfo) => {
+  if (isApplyingRemoteChanges) return;
+  // Bara ny ordning i samma mapp: databasen sparar ingen ordning
+  if (moveInfo.parentId === moveInfo.oldParentId) return;
+
+  sendToN8n({
+    action: 'MOVE',
+    data: {
+      id: id,
+      parentId: moveInfo.parentId
+    }
+  });
+});
+
 // Hjälpfunktion för att skicka händelser till n8n
 function sendToN8n(payload) {
   n8nFetch('bookmarks-event', {

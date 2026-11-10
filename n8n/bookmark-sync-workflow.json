@@ -81,6 +81,54 @@
               },
               "renameOutput": true,
               "outputKey": "delete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b7dd7f20-aa45-489b-8d2f-13b8879ab75a",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "UPDATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c4e3724e-ca52-4ddd-b667-0f561282b45e",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "MOVE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "move"
             }
           ]
         },
@@ -1029,6 +1077,54 @@
           "responseCode": 401
         }
       }
+    },
+    {
+      "id": "99b5d224-ff35-4a86-85bd-bcf32d1dd1f7",
+      "name": "Update title or url",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        468,
+        380
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      },
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE bookmarks\nSET title = COALESCE($2, title),\n    url = COALESCE($3, url),\n    updated_at = NOW()\nWHERE id = $1\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [String($json.body.data.id), $json.body.data.title ?? null, $json.body.data.url ?? null] }}"
+        }
+      }
+    },
+    {
+      "id": "730c0552-52a4-4e90-a567-47cbe3bd2c65",
+      "name": "Move to folder",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        468,
+        530
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      },
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE bookmarks\nSET parent_id = $2,\n    updated_at = NOW()\nWHERE id = $1\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [String($json.body.data.id), String($json.body.data.parentId)] }}"
+        }
+      }
     }
   ],
   "connections": {
@@ -1044,6 +1140,20 @@
         [
           {
             "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update title or url",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move to folder",
             "type": "main",
             "index": 0
           }
@@ -1373,6 +1483,28 @@
         [
           {
             "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update title or url": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to folder": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
