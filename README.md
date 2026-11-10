@@ -21,7 +21,7 @@ All SQL values are passed as query parameters, and CORS allows only `https://jar
 
 1. **n8n credential.** In n8n, create a credential of type *Header Auth* named `Bookmark extension token`, with the name `X-Bookmark-Token` and a long random value as the value.
 2. **Workflow.** Import `n8n/bookmark-sync-workflow.json` (or update the existing workflow), and pick that credential in the four extension webhooks.
-3. **Extension.** Load `extensions/` as an unpacked extension, open its options and paste the same value. The options page tests it against n8n.
+3. **Extension.** Load `extensions/` as an unpacked extension, open its options and paste the same value. The options page tests it against n8n. Tick "Den här datorn synkar med n8n" on **one** computer only: Chrome sync (the Google account) already spreads the bookmarks to the others, and Chrome ids differ per computer, so two syncing computers would mix them up in the database.
 4. **Dashboard.** Open `jarllindquist.com/bookmarks` and log in with Telegram (the same magic link as the cv admin). The session is shared with the admin, since both are on the same domain.
 
 The token is never stored in the code or in git.

@@ -27,6 +27,16 @@
             cursor: pointer;
         }
 
+        input[type="checkbox"] {
+            width: auto;
+            margin: 10px 6px 0 0;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+        }
+
         #status {
             margin-top: 8px;
             font-size: 12px;
@@ -40,6 +50,14 @@
     <input id="token" type="password" autocomplete="off">
     <button id="saveBtn">Spara</button>
     <div id="status"></div>
+
+    <hr>
+    <label>
+        <input id="syncDevice" type="checkbox">
+        Den här datorn synkar med n8n
+    </label>
+    <p class="hint">Kryssa bara i på en dator. Chrome synkar redan bokmärkena mellan dina datorer via
+        Google-kontot, och två synkande datorer skulle blanda ihop bokmärkena i databasen.</p>
 
     <script src="api.js"></script>
     <script src="options.js"></script>

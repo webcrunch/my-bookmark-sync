@@ -49,8 +49,40 @@ chrome.bookmarks.onRemoved.addListener((id, removeInfo) => {
   sendToN8n(payload);
 });
 
+// Lyssna när ett bokmärke eller en mapp byter namn (eller ett bokmärke byter adress)
+chrome.bookmarks.onChanged.addListener((id, changeInfo) => {
+  if (isApplyingRemoteChanges) return;
+
+  sendToN8n({
+    action: 'UPDATE',
+    data: {
+      id: id,
+      title: changeInfo.title,
+      url: changeInfo.url || null
+    }
+  });
+});
+
+// Lyssna när ett bokmärke eller en mapp flyttas till en annan mapp
+chrome.bookmarks.onMoved.addListener((id, moveInfo) => {
+  if (isApplyingRemoteChanges) return;
+  // Bara ny ordning i samma mapp: databasen sparar ingen ordning
+  if (moveInfo.parentId === moveInfo.oldParentId) return;
+
+  sendToN8n({
+    action: 'MOVE',
+    data: {
+      id: id,
+      parentId: moveInfo.parentId
+    }
+  });
+});
+
 // Hjälpfunktion för att skicka händelser till n8n
-function sendToN8n(payload) {
+async function sendToN8n(payload) {
+  // En dator som inte synkar skickar ingenting; Chrome-synken tar ändringen till den som gör det
+  if (!(await isSyncDevice())) return;
+
   n8nFetch('bookmarks-event', {
     method: 'POST',
     headers: {
@@ -84,7 +116,10 @@ chrome.alarms.onAlarm.addListener(alarm => {
 });
 
 // Funktion för att kontrollera ändringar från n8n
-const checkForUpdatesFromDashboard = () => {
+const checkForUpdatesFromDashboard = async () => {
+  // Bara den synkande datorn hämtar ändringar; de andra får dem via Chrome-synken
+  if (!(await isSyncDevice())) return;
+
   chrome.storage.local.get(['lastSyncTimestamp'], result => {
     // Om inget finns sparat, börja från 1970
     const lastSync = result.lastSyncTimestamp || new Date(0).toISOString();
