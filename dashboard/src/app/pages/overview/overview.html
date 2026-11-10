@@ -134,7 +134,7 @@
                         <div class="mb-2 flex items-center justify-between text-sm font-semibold text-slate-100">
                             <span>📁 {{ cat.folderName }}</span>
                             <span class="rounded-full border border-purple-800 bg-purple-950 px-2 py-0.5 text-xs text-purple-300">
-                                {{ cat.bookmarkIds.length }} länkar
+                                {{ cat.bookmarkIds.length }} {{ cat.bookmarkIds.length === 1 ? 'länk' : 'länkar' }}
                             </span>
                         </div>
                         <ul class="ml-2 space-y-1.5 border-l border-slate-800 pl-4 text-xs text-slate-300">
