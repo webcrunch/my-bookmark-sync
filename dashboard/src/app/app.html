@@ -1,16 +1,33 @@
-<div class="flex h-screen bg-slate-950 text-slate-100 overflow-hidden">
-  <!-- Fast Sidebar -->
-  <app-sidebar></app-sidebar>
+@if (auth.loggedIn()) {
+  <div class="flex h-dvh bg-slate-950 text-slate-100 overflow-hidden">
+    <!-- Sidomeny: fast på stor skärm, utfällbar panel på mobil -->
+    <app-sidebar [open]="menuOpen()" (close)="menuOpen.set(false)"></app-sidebar>
 
-  <!-- Huvudinnehåll som byts ut via Router -->
-  <main class="flex-1 overflow-y-auto p-8">
-    <!-- n8n svarade 401: logga in via admin på jarllindquist.com och kom tillbaka -->
-    @if (session.loginRequired()) {
-      <div class="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-amber-200">
-        Du behöver logga in för att se bokmärkena.
-        <a class="ml-1 font-semibold underline" [href]="session.loginUrl">Logga in via admin</a>
-      </div>
-    }
-    <router-outlet></router-outlet>
-  </main>
-</div>
+    <div class="flex min-w-0 flex-1 flex-col">
+      <!-- Sidhuvud: menyknapp (mobil) och sökning -->
+      <header class="flex items-center gap-3 border-b border-slate-800 bg-slate-950/80 px-4 py-3 lg:px-8">
+        <button type="button" (click)="menuOpen.set(true)" aria-label="Öppna menyn"
+          class="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800 lg:hidden">☰</button>
+        <form role="search" class="relative flex-1" (submit)="$event.preventDefault(); search(q.value)">
+          <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true">⌕</span>
+          <input #q type="search" [value]="bookmarks.query()" (input)="search(q.value)" placeholder="Sök bland bokmärkena"
+            aria-label="Sök bland bokmärkena"
+            class="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none">
+        </form>
+      </header>
+
+      <!-- Huvudinnehåll som byts ut via Router -->
+      <main class="flex-1 overflow-y-auto px-4 py-6 lg:p-8">
+        @if (bookmarks.error()) {
+          <div class="mx-auto mb-6 max-w-6xl rounded-lg border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200" role="alert">
+            {{ bookmarks.error() }}
+          </div>
+        }
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </div>
+} @else {
+  <!-- Utloggad, eller n8n svarade 401: inloggningen visas i stället för sidorna -->
+  <app-login></app-login>
+}

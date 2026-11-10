@@ -1,34 +1,38 @@
-<aside class="w-64 bg-slate-900 text-slate-100 flex flex-col h-screen border-r boder-slate-800 shrink-0">
+<!-- Mörk bakgrund bakom panelen på mobil; ett klick stänger -->
+@if (open()) {
+    <div class="fixed inset-0 z-30 bg-black/60 lg:hidden" (click)="close.emit()" aria-hidden="true"></div>
+}
+
+<aside id="sidebar" [class.-translate-x-full]="!open()"
+    class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-900 text-slate-100 transition-transform duration-200 lg:static lg:translate-x-0">
     <!-- Brand / Logo Header -->
-    <div class="pt-8 pb-4 flex items-center px-6 border-b border-slate-800 gap-3">
-        <span class="text-2xl">🔖</span>
-        <span class="font-bold text-lg tracking-wide text-white">BookmarkHub</span>
+    <div class="flex items-center gap-3 border-b border-slate-800 px-6 pb-4 pt-6 lg:pt-8">
+        <span class="text-2xl" aria-hidden="true">🔖</span>
+        <span class="text-lg font-bold tracking-wide text-white">BookmarkHub</span>
+        <button type="button" (click)="close.emit()" aria-label="Stäng menyn"
+            class="ml-auto grid h-9 w-9 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 lg:hidden">✕</button>
     </div>
 
     <!-- Navigation Links -->
-    <Nav class="flex-1 px-4 py-6 space-y-1">
-        <a routerLink="/home" routerLinkActive="bg-indigo-600 text-white font-medium"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
-            <span class="text-lg">📊</span>
-            <span>Dashboard</span>
-        </a>
-
-        <a routerLink="/overview" routerLinkActive="bg-indigo-600 text-white font-medium"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-color">
-            <span class="text-lg">🌳</span>
-            <span>Överblick & Träd</span>
-        </a>
-
-        <a routerLink="/tags" routerLinkActive="bg-indigo-600 text-white font-medium"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white tansition-color ">
-            <span class="text-lg">🏷️</span>
-            <span>Taggar & AI</span>
-        </a>
-
-    </Nav>
+    <nav class="flex-1 space-y-1 px-4 py-6" aria-label="Huvudmeny">
+        @for (item of items; track item.path) {
+            <a [routerLink]="item.path" routerLinkActive="bg-indigo-600 text-white font-medium"
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white">
+                <span class="text-lg" aria-hidden="true">{{ item.icon }}</span>
+                <span>{{ item.label }}</span>
+                @if (item.badge && item.badge()) {
+                    <span class="ml-auto rounded-full bg-amber-500/20 px-2 text-xs text-amber-300">{{ item.badge() }}</span>
+                }
+            </a>
+        }
+    </nav>
 
     <!-- Quick Info footer -->
-    <div class="p-4 border-t border-slate-800 text-xs text-slate-500">
-        <p>Synkad mot n8n postgreSQL</p>
+    <div class="border-t border-slate-800 p-4 text-xs text-slate-500">
+        <p>Synkad mot n8n och PostgreSQL</p>
+        <button type="button" (click)="auth.logout()"
+            class="mt-3 w-full rounded-lg border border-slate-700 px-3 py-2 text-slate-300 transition-colors hover:bg-slate-800 hover:text-white">
+            Logga ut
+        </button>
     </div>
 </aside>

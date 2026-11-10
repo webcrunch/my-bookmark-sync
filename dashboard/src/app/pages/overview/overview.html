@@ -1,226 +1,145 @@
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="mx-auto max-w-7xl space-y-6">
     <!-- Topprad -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-white tracking-tight">Överblick & Träd</h1>
-            <p class="text-slate-400 text-sm mt-1">Bläddra, organisera och hantera dina bokmärkesmappar</p>
-        </div>
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-white lg:text-3xl">Mappar</h1>
+        <p class="mt-1 text-sm text-slate-400">Bläddra i trädet och låt AI:n föreslå undermappar</p>
     </div>
 
-    <!-- Split View Container -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-12">
 
-        <!-- VÄNSTER: Mappträd (4 kolumner) -->
-        <div class="md:col-span-4 bg-slate-900 border border-slate-800 rounded-xl p-4 min-h-[550px]">
-            <div
-                class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-slate-300 font-semibold text-sm">
-                <span>📁 Mappar</span>
-                <button
-                    class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded border border-slate-700">
-                    + Rotmapp
+        <!-- VÄNSTER: Mappträd. På mobil överst, med egen rullning -->
+        <nav class="max-h-80 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900 p-3 md:col-span-4 md:max-h-[calc(100dvh-12rem)]"
+            aria-label="Mappträd">
+            @if (bookmarkService.folderTree().length === 0) {
+            <p class="p-3 text-sm text-slate-500">{{ bookmarkService.isLoading() ? 'Laddar mappar...' : 'Inga mappar än.' }}</p>
+            } @else {
+            <app-folder-tree [nodes]="bookmarkService.folderTree()" [selectedId]="selectedFolder()?.id ?? null"
+                (select)="selectFolder($event)"></app-folder-tree>
+            }
+        </nav>
+
+        <!-- HÖGER: Mappens innehåll -->
+        <section #content class="scroll-mt-4 rounded-xl border border-slate-800 bg-slate-900 p-4 md:col-span-8 lg:p-6"
+            aria-live="polite">
+            @if (selectedFolder(); as folder) {
+            <!-- Rubrik & AI-knapp -->
+            <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 pb-4">
+                <div class="min-w-0">
+                    @if (selectedPath()) {
+                    <p class="truncate text-xs text-slate-500">{{ selectedPath() }}</p>
+                    }
+                    <h2 class="truncate text-xl font-bold text-white">{{ folder.title }}</h2>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                        {{ currentFolderLinks().length }} {{ currentFolderLinks().length === 1 ? 'länk' : 'länkar' }},
+                        {{ currentFolderItems().length - currentFolderLinks().length }}
+                        {{ currentFolderItems().length - currentFolderLinks().length === 1 ? 'undermapp' : 'undermappar' }}
+                    </p>
+                </div>
+
+                <button type="button" (click)="startAiOrganize()"
+                    [disabled]="isAiAnalyzing() || currentFolderLinks().length < 2"
+                    [title]="currentFolderLinks().length < 2 ? 'Behöver minst två länkar i mappen' : 'Föreslå undermappar för länkarna här'"
+                    class="flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-40 disabled:hover:bg-purple-600">
+                    @if (isAiAnalyzing()) {
+                    <span class="animate-spin" aria-hidden="true">↻</span>
+                    <span>Analyserar med AI...</span>
+                    } @else {
+                    <span aria-hidden="true">✨</span>
+                    <span>Auto-organisera</span>
+                    }
                 </button>
             </div>
 
-            <div class="space-y-1 text-sm">
-                @for (node of bookmarkService.folderTree(); track node.id) {
-                <div>
-                    <div (click)="selectFolder(node)" [class.bg-slate-800]="selectedFolder()?.id === node.id"
-                        [class.text-white]="selectedFolder()?.id === node.id"
-                        class="flex items-center justify-between px-2.5 py-1.5 rounded-lg cursor-pointer text-slate-300 hover:bg-slate-800/60 hover:text-white transition group">
-                        <div class="flex items-center gap-2 truncate">
-                            @if (node.children && node.children.length > 0) {
-                            <button (click)="toggleExpand(node, $event)"
-                                class="text-slate-500 hover:text-slate-300 w-4 text-center">
-                                {{ node.expanded ? '▼' : '▶' }}
-                            </button>
-                            } @else {
-                            <span class="w-4"></span>
-                            }
-                            <span>📁</span>
-                            <span class="truncate font-medium">{{ node.title || 'Namnlös mapp' }}</span>
-                        </div>
+            @if (message()) {
+            <p class="mt-4 rounded-lg border border-slate-700 bg-slate-800/60 p-3 text-sm text-slate-200" role="status">{{ message() }}</p>
+            }
 
-                        <div
-                            class="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-slate-400 transition">
-                            <button title="Lägg till länk" class="hover:text-indigo-400 px-1">🔗+</button>
-                            <button title="Ta bort mapp" class="hover:text-rose-400 px-1">🗑️</button>
-                        </div>
-                    </div>
-
-                    <!-- Undermappar -->
-                    @if (node.expanded && node.children && node.children.length > 0) {
-                    <div class="pl-6 space-y-1 mt-1 border-l border-slate-800/80 ml-4">
-                        @for (child of node.children; track child.id) {
-                        <div (click)="selectFolder(child)" [class.bg-slate-800]="selectedFolder()?.id === child.id"
-                            [class.text-white]="selectedFolder()?.id === child.id"
-                            class="flex items-center justify-between px-2 py-1 rounded cursor-pointer text-slate-400 hover:bg-slate-800/60 hover:text-white text-xs group">
-                            <div class="flex items-center gap-1.5 truncate">
-                                <span>📁</span>
-                                <span class="truncate">{{ child.title }}</span>
-                            </div>
-                        </div>
-                        }
-                    </div>
-                    }
-                </div>
+            <!-- Innehållslista -->
+            <div class="mt-2 divide-y divide-slate-800">
+                @if (currentFolderItems().length === 0) {
+                <div class="py-12 text-center text-sm text-slate-500">Mappen är tom.</div>
+                } @else {
+                @for (item of paginatedItems(); track item.id) {
+                @if (item.isFolder) {
+                <button type="button" (click)="selectFolder(item)"
+                    class="flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left transition hover:bg-slate-800/40">
+                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-800 text-base" aria-hidden="true">📁</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block truncate text-sm font-semibold text-slate-100">{{ item.title }}</span>
+                        <span class="text-xs text-slate-500">Undermapp</span>
+                    </span>
+                    <span class="text-slate-500" aria-hidden="true">›</span>
+                </button>
+                } @else {
+                <app-link-row [bookmark]="item"></app-link-row>
+                }
+                }
                 }
             </div>
-        </div>
 
-        <!-- HÖGER: Mappinnehåll & Länkar (8 kolumner) -->
-        <div
-            class="md:col-span-8 bg-slate-900 border border-slate-800 rounded-xl p-6 min-h-[550px] flex flex-col justify-between">
-            @if (selectedFolder()) {
-            <div>
-                <!-- Rubrik & Åtgärdsknappar -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">📁</span>
-                            <h2 class="text-xl font-bold text-white">{{ selectedFolder()?.title }}</h2>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">
-                            {{ currentFolderItems().length }} objekt totalt ({{ currentFolderLinks().length }} länkar)
-                        </p>
-                    </div>
-
-                    <!-- Knappar: AI-Organisera & Ny Länk -->
-                    <div class="flex items-center gap-2">
-                        <button (click)="startAiOrganize()"
-                            [disabled]="isAiAnalyzing() || currentFolderLinks().length < 2"
-                            class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:hover:bg-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5">
-                            @if (isAiAnalyzing()) {
-                            <span class="animate-spin text-sm">🔄</span>
-                            <span>Analyserar med AI...</span>
-                            } @else {
-                            <span>✨</span>
-                            <span>Auto-organisera</span>
-                            }
-                        </button>
-
-                        <button
-                            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5">
-                            <span>+</span> Ny Länk
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Innehållslista (Paginering) -->
-                <div class="mt-4 divide-y divide-slate-800">
-                    @if (currentFolderItems().length === 0) {
-                    <div class="py-12 text-center text-slate-500 text-sm">
-                        Mappen är tom. Klicka på "+ Ny Länk" för att spara något här!
-                    </div>
-                    } @else {
-                    @for (item of paginatedItems(); track item.id) {
-                    <div
-                        class="py-3 flex items-center justify-between gap-4 hover:bg-slate-800/40 px-2 rounded-lg transition group">
-                        <div class="min-w-0 flex items-center gap-3">
-                            <span class="text-lg shrink-0">{{ item.isFolder ? '📁' : '🔗' }}</span>
-                            <div class="truncate">
-                                @if (item.isFolder) {
-                                <span class="text-sm font-semibold text-slate-200 block truncate">{{ item.title
-                                    }}</span>
-                                <span class="text-xs text-slate-500">Undermapp</span>
-                                } @else {
-                                <a [href]="item.url" target="_blank"
-                                    class="text-sm font-medium text-slate-200 hover:text-indigo-400 block truncate">
-                                    {{ item.title }}
-                                </a>
-                                <span class="text-xs text-slate-500 block truncate">{{ item.url }}</span>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                            <button title="Redigera" class="p-1 text-slate-400 hover:text-slate-200 text-xs">✏️</button>
-                            <button title="Ta bort" class="p-1 text-slate-400 hover:text-rose-400 text-xs">🗑️</button>
-                        </div>
-                    </div>
-                    }
-                    }
-                </div>
-            </div>
-
-            <!-- Paginering Footer -->
+            <!-- Paginering -->
             @if (totalPages() > 1) {
-            <div class="pt-4 mt-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4 text-xs text-slate-400">
                 <div>
                     Visar {{ (currentPage() - 1) * pageSize() + 1 }}–{{ Math.min(currentPage() * pageSize(),
                     currentFolderItems().length) }} av {{ currentFolderItems().length }}
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button (click)="prevPage()" [disabled]="currentPage() === 1"
-                        class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 rounded border border-slate-700 transition">
+                    <button type="button" (click)="prevPage()" [disabled]="currentPage() === 1"
+                        class="rounded border border-slate-700 bg-slate-800 px-2.5 py-1 text-slate-200 transition hover:bg-slate-700 disabled:opacity-40">
                         ← Föregående
                     </button>
-
-                    <span class="px-2 font-medium text-slate-300">
-                        {{ currentPage() }} / {{ totalPages() }}
-                    </span>
-
-                    <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
-                        class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 rounded border border-slate-700 transition">
+                    <span class="px-2 font-medium text-slate-300">{{ currentPage() }} / {{ totalPages() }}</span>
+                    <button type="button" (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                        class="rounded border border-slate-700 bg-slate-800 px-2.5 py-1 text-slate-200 transition hover:bg-slate-700 disabled:opacity-40">
                         Nästa →
                     </button>
                 </div>
             </div>
             }
             } @else {
-            <div class="h-full flex flex-col items-center justify-center py-24 text-slate-500">
-                <span class="text-4xl mb-3">👈</span>
-                <p class="text-base font-medium text-slate-400">Välj en mapp i trädet till vänster</p>
+            <div class="flex flex-col items-center justify-center py-24 text-slate-500">
+                <p class="text-base font-medium text-slate-400">Välj en mapp i trädet</p>
             </div>
             }
-        </div>
+        </section>
     </div>
 
-    <!-- AI FÖRSLAGS-MODAL (Bekräfta Ändringar) -->
+    <!-- AI-FÖRSLAG (bekräfta ändringar) -->
     @if (showAiModal() && aiSuggestion()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-        <div
-            class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+        role="dialog" aria-modal="true" aria-labelledby="ai-title">
+        <div class="flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 bg-slate-900 shadow-2xl sm:rounded-2xl">
 
-            <!-- Modal Header -->
-            <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+            <div class="flex items-center justify-between border-b border-slate-800 p-5">
                 <div class="flex items-center gap-3">
-                    <span class="text-2xl">✨</span>
+                    <span class="text-2xl" aria-hidden="true">✨</span>
                     <div>
-                        <h3 class="text-lg font-bold text-white">AI-förslag på undermappar</h3>
-                        <p class="text-xs text-slate-400">Granska strukturen innan den skapas i databasen</p>
+                        <h3 id="ai-title" class="text-lg font-bold text-white">AI-förslag på undermappar</h3>
+                        <p class="text-xs text-slate-400">Ingenting flyttas förrän du godkänner</p>
                     </div>
                 </div>
-                <button (click)="closeModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+                <button type="button" (click)="closeModal()" aria-label="Stäng" class="text-xl text-slate-400 hover:text-white">✕</button>
             </div>
 
-            <!-- Modal Body: Mappförslag & Länkar -->
-            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+            <div class="flex-1 space-y-4 overflow-y-auto p-5">
                 <p class="text-sm text-slate-300">
-                    Följande undermappar kommer att skapas inuti <strong class="text-indigo-400">{{
-                        selectedFolder()?.title }}</strong>:
+                    Följande undermappar skapas i <strong class="text-indigo-300">{{ selectedFolder()?.title }}</strong>:
                 </p>
 
                 <div class="space-y-3">
                     @for (cat of aiSuggestion()?.categories; track cat.folderName) {
-                    <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between font-semibold text-slate-100 text-sm mb-2">
-                            <span class="flex items-center gap-2">
-                                <span>📁</span> {{ cat.folderName }}
-                            </span>
-                            <span
-                                class="text-xs px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">
+                    <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-4">
+                        <div class="mb-2 flex items-center justify-between text-sm font-semibold text-slate-100">
+                            <span>📁 {{ cat.folderName }}</span>
+                            <span class="rounded-full border border-purple-800 bg-purple-950 px-2 py-0.5 text-xs text-purple-300">
                                 {{ cat.bookmarkIds.length }} länkar
                             </span>
                         </div>
-
-                        <!-- Länkarna i mappen -->
-                        <ul class="text-xs text-slate-400 space-y-1.5 pl-6 border-l border-slate-800 ml-2">
+                        <ul class="ml-2 space-y-1.5 border-l border-slate-800 pl-4 text-xs text-slate-300">
                             @for (bmId of cat.bookmarkIds; track bmId) {
-                            <li class="truncate flex items-center gap-2">
-                                <span class="text-slate-600">•</span>
-                                <span class="text-slate-300 truncate">{{ getBookmarkTitle(bmId) }}</span>
-                            </li>
+                            <li class="truncate">{{ getBookmarkTitle(bmId) }}</li>
                             }
                         </ul>
                     </div>
@@ -228,25 +147,21 @@
                 </div>
             </div>
 
-            <!-- Modal Footer: Åtgärder -->
-            <div class="p-5 border-t border-slate-800 bg-slate-900/50 flex items-center justify-end gap-3">
-                <button (click)="closeModal()" [disabled]="isApplyingChanges()"
-                    class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-slate-700 transition">
+            <div class="flex items-center justify-end gap-3 border-t border-slate-800 p-5">
+                <button type="button" (click)="closeModal()" [disabled]="isApplyingChanges()"
+                    class="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-700">
                     Avbryt
                 </button>
-
-                <button (click)="applyAiSuggestion()" [disabled]="isApplyingChanges()"
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-2">
+                <button type="button" (click)="applyAiSuggestion()" [disabled]="isApplyingChanges()"
+                    class="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-50">
                     @if (isApplyingChanges()) {
-                    <span class="animate-spin text-sm">🔄</span>
-                    <span>Skapar mappar & flyttar...</span>
+                    <span class="animate-spin" aria-hidden="true">↻</span>
+                    <span>Skapar mappar...</span>
                     } @else {
-                    <span>✨</span>
-                    <span>Godkänn & Tillämpa</span>
+                    <span>Godkänn</span>
                     }
                 </button>
             </div>
-
         </div>
     </div>
     }
