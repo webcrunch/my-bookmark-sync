@@ -1,0 +1,29 @@
+# Produktion: imagen byggs i GitHub Actions (.github/workflows/deploy.yml) och hämtas från
+# Docker Hub. Traefik skickar jarllindquist.com/bookmarks till dashboarden.
+services:
+  bookmark-dashboard:
+    image: passwordnotsafe/bookmark-dashboard:latest
+    container_name: bookmark-dashboard
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bookmark-dashboard.rule=Host(`jarllindquist.com`) && PathPrefix(`/bookmarks`)"
+      - "traefik.http.routers.bookmark-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.bookmark-dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.bookmark-dashboard.middlewares=bookmarks-slash@docker,bookmarks-strip@docker,bookmarks-csp@docker"
+      # /bookmarks utan snedstreck: annars pekar de relativa filnamnen fel
+      - "traefik.http.middlewares.bookmarks-slash.redirectregex.regex=^(https://[^/]+/bookmarks)$$"
+      - "traefik.http.middlewares.bookmarks-slash.redirectregex.replacement=$${1}/"
+      - "traefik.http.middlewares.bookmarks-slash.redirectregex.permanent=true"
+      - "traefik.http.middlewares.bookmarks-strip.stripprefix.prefixes=/bookmarks"
+      # Egen CSP: bara egna filer, och anrop bara till samma domän (n8n ligger på jarllindquist.com/n8n).
+      # Angular lägger komponenternas stilar i <style>-taggar, därav 'unsafe-inline' för stilar.
+      - "traefik.http.middlewares.bookmarks-csp.headers.contentSecurityPolicy=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - "traefik.http.services.bookmark-dashboard.loadbalancer.server.port=80"
+      - "traefik.http.services.bookmark-dashboard.loadbalancer.healthcheck.path=/health"
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
