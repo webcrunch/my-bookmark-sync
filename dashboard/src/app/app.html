@@ -4,6 +4,13 @@
 
   <!-- Huvudinnehåll som byts ut via Router -->
   <main class="flex-1 overflow-y-auto p-8">
+    <!-- n8n svarade 401: logga in via admin på jarllindquist.com och kom tillbaka -->
+    @if (session.loginRequired()) {
+      <div class="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-amber-200">
+        Du behöver logga in för att se bokmärkena.
+        <a class="ml-1 font-semibold underline" [href]="session.loginUrl">Logga in via admin</a>
+      </div>
+    }
     <router-outlet></router-outlet>
   </main>
 </div>

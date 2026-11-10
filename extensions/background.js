@@ -1,5 +1,5 @@
-const N8N_SYNC_WEBHOOK_URL = 'https://jarllindquist.com/n8n/webhook/bookmarks-event';
-const N8N_GET_UPDATES_URL = 'https://jarllindquist.com/n8n/webhook/bookmarks-get-updates';
+// n8nFetch och nyckeln kommer från api.js
+importScripts('api.js');
 
 // Flagga för att undvika oändliga loopar när pollingen ändrar saker i Chrome
 let isApplyingRemoteChanges = false;
@@ -51,7 +51,7 @@ chrome.bookmarks.onRemoved.addListener((id, removeInfo) => {
 
 // Hjälpfunktion för att skicka händelser till n8n
 function sendToN8n(payload) {
-  fetch(N8N_SYNC_WEBHOOK_URL, {
+  n8nFetch('bookmarks-event', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ const checkForUpdatesFromDashboard = () => {
 
     console.log(`Polling: Kollar ändringar sedan ${lastSync}...`);
 
-    fetch(`${N8N_GET_UPDATES_URL}?since=${encodeURIComponent(lastSync)}`)
+    n8nFetch(`bookmarks-get-updates?since=${encodeURIComponent(lastSync)}`)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
         return res.json();
@@ -130,7 +130,7 @@ const applyChangesToChrome = changes => {
 
   function updateIdInPostgres(tempId, realChromeId) {
 
-    fetch('https://jarllindquist.com/n8n/webhook/bookmarks-update-id', {
+    n8nFetch('bookmarks-update-id', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

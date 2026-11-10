@@ -1,0 +1,1386 @@
+{
+  "name": "[hook] - bookmark CRD",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        784,
+        128
+      ],
+      "id": "ad3862ee-69bd-49f4-ae57-a87801561830",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "0d85fbf6-f111-4d70-a1b1-483a167f01ef",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "CREATE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4ad0c20b-b007-4f67-8d38-52cc160489d1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e6106803-3edf-4d3b-8c85-faa3d23ddba1",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "DELETE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "delete"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        80
+      ],
+      "id": "f7e83374-a015-409c-b3fc-9353201bc8da",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bookmarks",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_folder": "={{ $json.body.data.isFolder }}",
+            "title": "={{ $json.body.data.title }}",
+            "url": "={{ $json.body.data.url }}",
+            "parent_id": "={{ $json.body.data.parentId }}",
+            "id": "={{ $json.body.data.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_folder",
+              "displayName": "is_folder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "parent_id",
+              "displayName": "parent_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        512,
+        64
+      ],
+      "id": "95dd9b4e-5139-4cab-9667-6e6724754a6d",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.bookmarks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "b5fe34aa-d73d-4600-af79-6e0ecab92ada",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bookmarks",
+          "mode": "list",
+          "cachedResultName": "bookmarks"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.body.data.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        512,
+        208
+      ],
+      "id": "337eb422-00d3-4a2d-b836-2571d3153987",
+      "name": "Delete table or rows",
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  id, \n  title, \n  url, \n  is_folder AS \"isFolder\", \n  parent_id AS \"parentId\", \n  'CREATE' AS action\nFROM bookmarks\nWHERE updated_at > $1::timestamptz \n  AND source = 'dashboard';",
+        "options": {
+          "queryReplacement": "={{ [String($json.query.since || '1970-01-01T00:00:00Z')] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        336,
+        -288
+      ],
+      "id": "fbb6bd6f-63d1-4e8a-9f33-4cc29ec8f2d1",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        -288
+      ],
+      "id": "e585bf30-ca4b-410b-b556-1cfb9212d791",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "path": "bookmarks-get-updates",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        },
+        "authentication": "headerAuth"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -288
+      ],
+      "id": "f8de71f6-99dc-4d91-a9af-f2368515d4fd",
+      "name": "GET - polling data",
+      "webhookId": "dd7ea431-4add-442d-9922-3e2b148de914",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Bookmark extension token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bookmarks-full-sync",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        },
+        "authentication": "headerAuth"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -128
+      ],
+      "id": "43252da7-4f46-40ae-87c1-8cc34d669b03",
+      "name": "POST -sync all",
+      "webhookId": "961ff704-0dbf-4ada-96d3-13f8df3e2f6c",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Bookmark extension token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bookmarks-event",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        },
+        "authentication": "headerAuth"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        80
+      ],
+      "id": "f5a8ed5d-35bc-4ad4-b375-70d4686a828e",
+      "name": "POST sync one or delete one",
+      "webhookId": "e158d115-569a-4fdd-8a27-ceaed3b0c06d",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Bookmark extension token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        -496
+      ],
+      "id": "8893094f-6e78-42fd-b0d1-b53baaaa0ce0",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hämta alla items från Postgres-noden\nconst allItems = $input.all();\n\n// Filtrera bort tomma items (objekt som saknar 'id') och mappa om\nconst changesList = allItems\n  .map(item => item.json)\n  .filter(data => data && data.id) // Släng bort tomma objekt!\n  .map(data => ({\n    ...data,\n    tempId: data.id\n  }));\n\n// Returnera alltid rätt format till Respond-noden\nreturn [\n  {\n    json: {\n      changes: changesList // Blir en helt tom array [] om inget fanns i Postgres\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -288
+      ],
+      "id": "aa2c89fb-7a34-41c3-8376-9f9a699b14dd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bookmarks-update-id",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        },
+        "authentication": "headerAuth"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        -496
+      ],
+      "id": "c69bf022-b309-452c-957c-c48323759b07",
+      "name": "POST - update id",
+      "webhookId": "dd7ea431-4add-442d-9922-3e2b148de914",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_IN_N8N",
+          "name": "Bookmark extension token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE bookmarks \nSET \n    id = $1,                      -- Det nya riktiga Chrome ID:t (t.ex. '342')\n    source = 'chrome',            -- Ändra source till chrome så den inte skickas i polling igen\n    updated_at = NOW()\nWHERE id = $2;                    -- Det gamla temp ID:t (t.ex. 'temp-123')",
+        "options": {
+          "queryReplacement": "={{ [String($json.body.newId), String($json.body.oldId)] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        352,
+        -496
+      ],
+      "id": "6fdca938-ae60-4927-9959-e869ed140d4c",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        448
+      ],
+      "id": "3949cbb7-d39f-4ee7-8727-f4ea9b05bb2c",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "path": "bookmarks-get-all",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        448
+      ],
+      "id": "114d3608-0e75-4804-a628-60f616cb7a73",
+      "name": "GET - fetch all data from db",
+      "webhookId": "dd7ea431-4add-442d-9922-3e2b148de914"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  id, \n  title, \n  url, \n  is_folder AS \"isFolder\", \n  parent_id AS \"parentId\",\n  source,\n  summary,\n  tags,\n  created_at AS \"createdAt\",\n  updated_at AS \"updatedAt\"\nFROM bookmarks\nORDER BY is_folder DESC, title ASC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        336,
+        448
+      ],
+      "id": "ec1888c6-39b6-4eee-9fd0-fd86d02e19a5",
+      "name": "Execute a SQL get all data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bookmarks-ai-organize",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        736
+      ],
+      "id": "110a92cd-b21e-4ed4-b042-c67f4c63f1db",
+      "name": "Webhook",
+      "webhookId": "13a74f18-3c16-4b9d-83c0-bebd67da4f37"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "mistral:latest",
+          "mode": "list",
+          "cachedResultName": "mistral:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du är en strukturerad assistent för bokmärkesorganisering. \nGruppera följande bokmärken i 2 till 6 relevanta och koncisa undermappar baserat på deras titlar och sammanfattningar.\n\nBokmärken att organisera:\n{{ JSON.stringify($json.body.bookmarks) }}\n\nReturnera ENDAST giltig JSON utan markdown-block eller extra text i detta format:\n{\n  \"categories\": [\n    {\n      \"folderName\": \"Namn på undermapp\",\n      \"bookmarkIds\": [\"id1\", \"id2\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        144,
+        736
+      ],
+      "id": "a4fbb9b0-9425-482e-ad71-5d974e7ca045",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "VgNxNiAh2YSlRvAa",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hämta textsträngen från AI-nodens output\nconst item = $input.first().json;\nconst rawText = item.content || item.response || item.text || '';\n\nlet parsed = { categories: [] };\n\ntry {\n  // Regex som plockar ut allt mellan första { och sista }\n  const jsonMatch = rawText.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  // Fallback om parsing misslyckas\n  parsed = { categories: [] };\n}\n\n// Skicka med både målmappens ID och de parsade kategorierna\nreturn [{\n  json: {\n    targetFolderId: $('Webhook').first().json.body.folderId || '0',\n    categories: parsed.categories || []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        736
+      ],
+      "id": "42f89a5c-0f14-4d81-821f-f552c7ec9a60",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        736
+      ],
+      "id": "ff4da870-3666-4cf7-b923-1391223b1f2c",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bookmarks-apply-organize",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://jarllindquist.com,http://localhost:4200"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        1008
+      ],
+      "id": "fca7d3f2-99e1-45cd-86ee-249c0a0ac18a",
+      "name": "Webhook1",
+      "webhookId": "13a74f18-3c16-4b9d-83c0-bebd67da4f37"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst targetFolderId = String(body.targetFolderId || '0');\nconst categories = Array.isArray(body.categories) ? body.categories : [];\n\n// Values go to Postgres as parameters ($1–$3), never into the SQL text\nreturn categories\n  .filter(cat => Array.isArray(cat.bookmarkIds) && cat.bookmarkIds.length > 0)\n  .map(cat => ({\n    json: {\n      targetFolderId,\n      folderName: String(cat.folderName || 'Ny mapp').slice(0, 200),\n      bookmarkIds: JSON.stringify(cat.bookmarkIds.map(String))\n    }\n  }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        1008
+      ],
+      "id": "779162f2-792b-4e17-a567-4c16b2dcb78d",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        704,
+        1008
+      ],
+      "id": "5cf35476-9f45-465d-bdf7-d33e7bc88394",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH new_folder AS (\n  INSERT INTO bookmarks (title, is_folder, parent_id, source, created_at, updated_at)\n  VALUES ($1, TRUE, $2, 'dashboard', NOW(), NOW())\n  RETURNING id\n)\nUPDATE bookmarks\nSET\n  parent_id = (SELECT id FROM new_folder),\n  source = 'ai-dashboard',\n  updated_at = NOW()\nWHERE id IN (SELECT jsonb_array_elements_text($3::jsonb));",
+        "options": {
+          "queryReplacement": "={{ [$json.folderName, $json.targetFolderId, $json.bookmarkIds] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        1008
+      ],
+      "id": "ebd31ed5-6e08-49c4-b9ed-73322e7fb937",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "bookmarks",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_folder": "={{ $json.isFolder }}",
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "parent_id": "={{ $json.parentId }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_folder",
+              "displayName": "is_folder",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "parent_id",
+              "displayName": "parent_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        -128
+      ],
+      "id": "824dbd52-7365-4540-b689-f773ffd5e659",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "83b31c26-8277-44ca-994d-62fbe995b4e9",
+      "name": "Auth get-all: check session",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        200,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      },
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "options": {
+          "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
+        }
+      }
+    },
+    {
+      "id": "f9ece28a-d911-4524-9a4a-46789313f287",
+      "name": "Auth get-all: valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "e8b12f9b-e7a4-42c3-b61d-c275d0615bf5",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c179bdb0-2ac8-4d09-8247-a08ce6a90ceb",
+      "name": "Auth get-all: restore request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        820
+      ],
+      "parameters": {
+        "jsCode": "// The guard replaced $json; hand the original request on, so the next nodes read $json.body as before.\nreturn [{ json: $('GET - fetch all data from db').first().json }];"
+      }
+    },
+    {
+      "id": "8e1c44bf-9cec-440a-828f-0f695e88b87e",
+      "name": "Auth get-all: 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        600,
+        980
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"unauthorized\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "c8796ccd-aebb-4984-9432-9b156e787576",
+      "name": "Auth ai-organize: check session",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        152,
+        1160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      },
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "options": {
+          "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
+        }
+      }
+    },
+    {
+      "id": "e901ecc5-47cb-4545-b51f-d21a77fda4f1",
+      "name": "Auth ai-organize: valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        1160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "3e92ef9b-d45d-4de3-be5f-ebac86b73902",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "44f2de44-6a2d-48f5-ac4f-34efd2ae62d0",
+      "name": "Auth ai-organize: restore request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        552,
+        1080
+      ],
+      "parameters": {
+        "jsCode": "// The guard replaced $json; hand the original request on, so the next nodes read $json.body as before.\nreturn [{ json: $('Webhook').first().json }];"
+      }
+    },
+    {
+      "id": "820a7e04-f257-4468-9940-b6fd348a228b",
+      "name": "Auth ai-organize: 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        552,
+        1240
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"unauthorized\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "6d0183b4-81d5-4f6f-9358-a80e5dd25a7d",
+      "name": "Auth apply-organize: check session",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        136,
+        1420
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "6W6j6INQa2RE2rIH",
+          "name": "Postgres account"
+        }
+      },
+      "alwaysOutputData": true,
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "options": {
+          "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
+        }
+      }
+    },
+    {
+      "id": "ed6a0bac-3f7d-4986-8621-618013da322e",
+      "name": "Auth apply-organize: valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        1420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cdceb807-e88a-4aac-b861-c0b9ac7e120e",
+              "leftValue": "={{ $json.token }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b1d56c9f-dfa3-46dd-a080-61f0da6a589e",
+      "name": "Auth apply-organize: restore request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        536,
+        1340
+      ],
+      "parameters": {
+        "jsCode": "// The guard replaced $json; hand the original request on, so the next nodes read $json.body as before.\nreturn [{ json: $('Webhook1').first().json }];"
+      }
+    },
+    {
+      "id": "6c2db64f-839d-4ea4-a218-3600a2868e1e",
+      "name": "Auth apply-organize: 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        536,
+        1500
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"unauthorized\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete table or rows": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET - polling data": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST -sync all": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST sync one or delete one": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST - update id": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET - fetch all data from db": {
+      "main": [
+        [
+          {
+            "node": "Auth get-all: check session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL get all data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Auth ai-organize: check session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Auth apply-organize: check session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth get-all: check session": {
+      "main": [
+        [
+          {
+            "node": "Auth get-all: valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth get-all: valid?": {
+      "main": [
+        [
+          {
+            "node": "Auth get-all: restore request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auth get-all: 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth get-all: restore request": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL get all data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth ai-organize: check session": {
+      "main": [
+        [
+          {
+            "node": "Auth ai-organize: valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth ai-organize: valid?": {
+      "main": [
+        [
+          {
+            "node": "Auth ai-organize: restore request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auth ai-organize: 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth ai-organize: restore request": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth apply-organize: check session": {
+      "main": [
+        [
+          {
+            "node": "Auth apply-organize: valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth apply-organize: valid?": {
+      "main": [
+        [
+          {
+            "node": "Auth apply-organize: restore request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auth apply-organize: 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth apply-organize: restore request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
