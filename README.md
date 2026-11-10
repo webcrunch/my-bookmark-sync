@@ -25,3 +25,13 @@ All SQL values are passed as query parameters, and CORS allows only `https://jar
 4. **Dashboard.** Log in through `jarllindquist.com/admin` first. The dashboard reads the session from `localStorage` on the same domain; without it, it shows a link to the login.
 
 The token is never stored in the code or in git.
+
+## Deployment
+
+Nobody needs to log in to the server:
+
+- **CI** (`.github/workflows/ci.yml`) runs on every push and PR. It builds the dashboard, syntax-checks the extension, and fails if the n8n workflow has a webhook without auth or `{{ }}` inside an SQL query.
+- **Deploy** (`.github/workflows/deploy.yml`) runs when CI is green on `main`, or by hand. It builds `dashboard/Dockerfile`, pushes `passwordnotsafe/bookmark-dashboard` to Docker Hub, copies `docker-compose.prod.yml` to `/home/repos/my-bookmark-sync` on the server and starts it. Traefik routes `jarllindquist.com/bookmarks` to the container.
+- The server and Docker Hub secrets come from Vault, the same as for the other projects; the repo only holds `VAULT_ROLE_ID` and `VAULT_SECRET_ID`.
+
+The n8n workflow is not deployed by this; it is updated in n8n.

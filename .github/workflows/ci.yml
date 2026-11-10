@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Build the dashboard
+        working-directory: dashboard
+        run: |
+          npm ci --no-audit --no-fund
+          npx ng build --base-href /bookmarks/
+
+      - name: Check the extension
+        working-directory: extensions
+        run: |
+          for f in *.js; do node --check "$f"; done
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+
+      # Värden går till Postgres som parametrar; en {{ }} i själva SQL-texten är en väg in i databasen.
+      - name: Check the n8n workflow
+        run: |
+          node -e "
+          const w = JSON.parse(require('fs').readFileSync('n8n/bookmark-sync-workflow.json', 'utf8'));
+          const bad = w.nodes.filter(n => /\{\{/.test(n.parameters?.query || ''));
+          const open = w.nodes.filter(n => n.type.endsWith('.webhook') && !n.parameters.authentication && !w.connections[n.name]?.main?.[0]?.[0]?.node.startsWith('Auth '));
+          if (bad.length) { console.error('SQL with {{ }}:', bad.map(n => n.name)); process.exit(1); }
+          if (open.length) { console.error('Webhook without auth:', open.map(n => n.name)); process.exit(1); }
+          console.log('workflow ok:', w.nodes.length, 'nodes');
+          "
