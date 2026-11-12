@@ -832,7 +832,7 @@
       "alwaysOutputData": true,
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND app = 'bookmarks'\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
         "options": {
           "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
         }
@@ -920,7 +920,7 @@
       "alwaysOutputData": true,
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND app = 'bookmarks'\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
         "options": {
           "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
         }
@@ -1008,7 +1008,7 @@
       "alwaysOutputData": true,
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
+        "query": "UPDATE admin_tokens\nSET expires_at = NOW() + INTERVAL '15 minutes'\nWHERE token = $1\n  AND app = 'bookmarks'\n  AND status = 'session'\n  AND expires_at > NOW()\nRETURNING token;",
         "options": {
           "queryReplacement": "={{ [String($json.headers['x-admin-session'] || '')] }}"
         }

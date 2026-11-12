@@ -13,7 +13,7 @@ Every webhook needs a credential:
 | Caller | Webhooks | How it is checked |
 |---|---|---|
 | Extension | `bookmarks-event`, `bookmarks-full-sync`, `bookmarks-get-updates`, `bookmarks-update-id` | n8n Header Auth: `X-Bookmark-Token` |
-| Dashboard | `bookmarks-get-all`, `bookmarks-ai-organize`, `bookmarks-apply-organize` | `X-Admin-Session`, the same admin session as the cv admin on jarllindquist.com |
+| Dashboard | `bookmarks-get-all`, `bookmarks-ai-organize`, `bookmarks-apply-organize` | `X-Admin-Session`, a session for app `bookmarks` from the shared magic-link login (it does not work in the cv admin, and a cv admin session does not work here) |
 
 All SQL values are passed as query parameters, and CORS allows only `https://jarllindquist.com` (and `http://localhost:4200` for development).
 

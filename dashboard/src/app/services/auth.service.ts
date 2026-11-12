@@ -1,11 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 
-// Samma inloggning som admin på jarllindquist.com (magisk länk via Telegram), men direkt i
-// dashboarden. Sessionen sparas under samma nycklar i localStorage, så inloggad här är
-// inloggad i admin och tvärtom (samma domän).
-const SESSION_KEY = 'admin_session_id';
-const FLAG_KEY = 'admin_authenticated';
-const EXPIRES_KEY = 'admin_expires_at';
+// Samma inloggning som admin på jarllindquist.com (magisk länk via Telegram), men som eget
+// system: app "bookmarks". Telegram-meddelandet säger Bokmärken, och sessionen gäller bara här,
+// så den sparas under egna nycklar och inte under admins (samma domän).
+const APP = 'bookmarks';
+const SESSION_KEY = 'bookmarks_session_id';
+const FLAG_KEY = 'bookmarks_authenticated';
+const EXPIRES_KEY = 'bookmarks_expires_at';
 const TIMEOUT_MS = 15 * 60 * 1000; // n8n förnyar sessionen 15 minuter vid varje anrop
 const N8N = 'https://jarllindquist.com/n8n/webhook';
 
@@ -41,7 +42,16 @@ export class AuthService {
     if (this.waiting()) return;
     this.message.set('Skickar länk till Telegram...');
     try {
-      const res = await fetch(`${N8N}/request-magic-link`, { method: 'POST' });
+      const res = await fetch(`${N8N}/request-magic-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app: APP })
+      });
+      // n8n skickar högst en länk i minuten
+      if (res.status === 429) {
+        this.message.set('En länk skickades nyss. Vänta en minut och försök igen.');
+        return;
+      }
       const data = await res.json();
       if (!data?.sessionId) throw new Error('no sessionId');
 
