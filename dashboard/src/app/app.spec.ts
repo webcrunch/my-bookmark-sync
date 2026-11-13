@@ -1,23 +1,31 @@
 import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-describe('App', () => {
+import { AppComponent } from './app';
+
+describe('AppComponent', () => {
   beforeEach(async () => {
+    // Nobody is logged in: no session in storage
+    localStorage.clear();
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [AppComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+  it('is created', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
+  it('shows the login and not the bookmarks when nobody is logged in', async () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, dashboard');
+    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('app-login')).not.toBeNull();
+    expect(page.querySelector('app-sidebar')).toBeNull();
   });
 });
