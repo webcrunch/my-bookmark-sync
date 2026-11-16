@@ -23,6 +23,10 @@ jobs:
           npm ci --no-audit --no-fund
           npx ng build --base-href /bookmarks/
 
+      - name: Test the dashboard
+        working-directory: dashboard
+        run: npx ng test --watch=false
+
       - name: Check the extension
         working-directory: extensions
         run: |
